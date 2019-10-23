@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ABCharacter.h"
+#include "ABAnimInstance.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -32,7 +32,8 @@ AABCharacter::AABCharacter()
 		GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 	}
 
-	SetControlMode(EControlMode::DIABLO);
+	SetControlMode(EControlMode::GTA);
+	GetCharacterMovement()->JumpZVelocity = 800.0f;
 }
 
 // Called when the game starts or when spawned
@@ -51,6 +52,14 @@ void AABCharacter::Tick(float DeltaTime)
 		GetController()->SetControlRotation(FRotationMatrix::MakeFromX(DirectionToMove).Rotator());
 		AddMovementInput(DirectionToMove);
 	}
+
+	auto ABAnimInstance = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+	/*
+	if (nullptr != ABAnimInstance)
+	{
+		ABAnimInstance->SetPawnSpeed(GetVelocity().Size());
+	}
+	*/
 }
 
 // Called to bind functionality to input
@@ -62,6 +71,8 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AABCharacter::LeftRight);
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AABCharacter::LookUp);
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AABCharacter::Turn);
+	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AABCharacter::Attack);
 }
 
 void AABCharacter::UpDown(float NewAxisValue)
@@ -108,6 +119,11 @@ void AABCharacter::Turn(float NewAxisValue)
 		AddControllerYawInput(NewAxisValue);
 		break;
 	}
+}
+
+void AABCharacter::Attack()
+{
+	ABLOG_S(Warning);
 }
 
 void AABCharacter::SetControlMode(EControlMode NewControlMode)

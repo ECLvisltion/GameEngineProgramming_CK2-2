@@ -38,6 +38,8 @@ private:
 	void LookUp(float NewAxisValue);
 	void Turn(float NewAxisValue);
 
+	void Attack();
+
 	enum class EControlMode
 	{
 		GTA,
