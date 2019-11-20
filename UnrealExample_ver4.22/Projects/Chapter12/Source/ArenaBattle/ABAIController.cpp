@@ -24,9 +24,9 @@ AABAIController::AABAIController()
 	}
 }
 
-void AABAIController::Possess(APawn* InPawn)
+void AABAIController::OnPossess(APawn* InPawn)
 {
-	Super::Possess(InPawn);
+	Super::OnPossess(InPawn);
 	if (UseBlackboard(BBAsset, Blackboard))
 	{
 		Blackboard->SetValueAsVector(HomePosKey, InPawn->GetActorLocation());

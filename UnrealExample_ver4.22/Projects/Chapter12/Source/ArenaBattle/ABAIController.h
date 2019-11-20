@@ -16,7 +16,7 @@ class ARENABATTLE_API AABAIController : public AAIController
 	
 public:
 	AABAIController();
-	virtual void Possess(APawn* InPawn) override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	static const FName HomePosKey;
 	static const FName PatrolPosKey;

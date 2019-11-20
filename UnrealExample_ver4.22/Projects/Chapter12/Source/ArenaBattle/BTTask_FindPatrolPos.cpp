@@ -3,6 +3,7 @@
 #include "BTTask_FindPatrolPos.h"
 #include "ABAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "NavigationSystem.h"
 
 UBTTask_FindPatrolPos::UBTTask_FindPatrolPos()
 {
@@ -17,7 +18,7 @@ EBTNodeResult::Type UBTTask_FindPatrolPos::ExecuteTask(UBehaviorTreeComponent & 
 	if (nullptr == ControllingPawn)
 		return EBTNodeResult::Failed;
 
-	UNavigationSystem* NavSystem = UNavigationSystem::GetNavigationSystem(ControllingPawn->GetWorld());
+	UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetNavigationSystem(ControllingPawn->GetWorld());
 	if (nullptr == NavSystem)
 		return EBTNodeResult::Failed;
 

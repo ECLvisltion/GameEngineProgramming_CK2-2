@@ -9,7 +9,7 @@ UABGameInstance::UABGameInstance()
 	static ConstructorHelpers::FObjectFinder<UDataTable> DT_ABCHARACTER(*CharacterDataPath);
 	ABCHECK(DT_ABCHARACTER.Succeeded());
 	ABCharacterTable = DT_ABCHARACTER.Object;
-	ABCHECK(ABCharacterTable->RowMap.Num() > 0);
+	ABCHECK(ABCharacterTable->GetRowMap().Num() > 0);
 }
 
 void UABGameInstance::Init()
