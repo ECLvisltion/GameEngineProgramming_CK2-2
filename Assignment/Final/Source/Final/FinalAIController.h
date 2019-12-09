@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Final.h"
 #include "AIController.h"
 #include "FinalAIController.generated.h"
 
@@ -14,4 +14,15 @@ class FINAL_API AFinalAIController : public AAIController
 {
 	GENERATED_BODY()
 	
+public:
+	AFinalAIController();
+	virtual void OnPossess(APawn * InPawn) override;
+	virtual void OnUnPossess() override;
+
+private:
+	UPROPERTY()
+	class UBehaviorTree * BTAsset;
+
+	UPROPERTY()
+	class UBlackboardData * BBAsset;
 };

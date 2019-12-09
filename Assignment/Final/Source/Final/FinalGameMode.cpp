@@ -2,14 +2,15 @@
 
 #include "FinalGameMode.h"
 #include "FinalCharacter.h"
-#include "UObject/ConstructorHelpers.h"
+#include "FinalPlayerController.h"
 
 AFinalGameMode::AFinalGameMode()
 {
-	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/ThirdPersonCPP/Blueprints/ThirdPersonCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
-	{
-		DefaultPawnClass = PlayerPawnBPClass.Class;
-	}
+	DefaultPawnClass = AFinalCharacter::StaticClass();
+	PlayerControllerClass = AFinalPlayerController::StaticClass();
+}
+
+void AFinalGameMode::PostLogin(APlayerController * NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
 }

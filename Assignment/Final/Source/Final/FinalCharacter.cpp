@@ -1,134 +1,80 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FinalCharacter.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
-#include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/InputComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/Controller.h"
-#include "GameFramework/SpringArmComponent.h"
+#include "FinalAIController.h"
 
-//////////////////////////////////////////////////////////////////////////
-// AFinalCharacter
-
+// Sets default values
 AFinalCharacter::AFinalCharacter()
 {
-	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	// Set this character to call Tick() every frame. You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
 
-	// set our turn rates for input
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
+	SpringArm->SetupAttachment(GetCapsuleComponent());
+	Camera->SetupAttachment(SpringArm);
 
-	// Don't rotate when the controller rotates. Let that just affect the camera.
-	bUseControllerRotationPitch = false;
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, -90.0f, 0.0f));
+	SpringArm->TargetArmLength = 400.0f;
+	SpringArm->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
+	SpringArm->bUsePawnControlRotation = true;
+	SpringArm->bInheritPitch = true;
+	SpringArm->bInheritRoll = true;
+	SpringArm->bInheritYaw = true;
+	SpringArm->bDoCollisionTest = true;
 	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
 
-	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
-	GetCharacterMovement()->JumpZVelocity = 600.f;
-	GetCharacterMovement()->AirControl = 0.2f;
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_STANDARD(TEXT("/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Standard.SK_CharM_Standard"));
+	if (SK_STANDARD.Succeeded()) { GetMesh()->SetSkeletalMesh(SK_STANDARD.Object); }
+	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 
-	// Create a camera boom (pulls in towards the player if there is a collision)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
-	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	static ConstructorHelpers::FClassFinder<UAnimInstance> STANDARD_ANIM(TEXT("/Game/Book/Animations/FinalAnimBlueprint.FinalAnimBlueprint_C"));
+	if (STANDARD_ANIM.Succeeded()) { GetMesh()->SetAnimInstanceClass(STANDARD_ANIM.Class); }
 
-	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+	AIControllerClass = AFinalAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
-//////////////////////////////////////////////////////////////////////////
-// Input
-
-void AFinalCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+// Called when the game starts or when spawned
+void AFinalCharacter::BeginPlay()
 {
-	// Set up gameplay key bindings
-	check(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-
-	PlayerInputComponent->BindAxis("MoveForward", this, &AFinalCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AFinalCharacter::MoveRight);
-
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &AFinalCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AFinalCharacter::LookUpAtRate);
-
-	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &AFinalCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &AFinalCharacter::TouchStopped);
-
-	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AFinalCharacter::OnResetVR);
+	Super::BeginPlay();
 }
 
-
-void AFinalCharacter::OnResetVR()
+// Called every frame
+void AFinalCharacter::Tick(float DeltaTime)
 {
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+	Super::Tick(DeltaTime);
 }
 
-void AFinalCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
+// Called to bind functionality to input
+void AFinalCharacter::SetupPlayerInputComponent(UInputComponent * PlayerInputComponent)
 {
-		Jump();
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AFinalCharacter::UpDown);
+	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AFinalCharacter::LeftRight);
+	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AFinalCharacter::LookUp);
+	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &AFinalCharacter::Turn);
 }
 
-void AFinalCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
+void AFinalCharacter::UpDown(float NewAxisValue)
 {
-		StopJumping();
+	AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::X), NewAxisValue);
 }
 
-void AFinalCharacter::TurnAtRate(float Rate)
+void AFinalCharacter::LeftRight(float NewAxisValue)
 {
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::Y), NewAxisValue);
 }
 
-void AFinalCharacter::LookUpAtRate(float Rate)
+void AFinalCharacter::LookUp(float NewAxisValue)
 {
-	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	AddControllerPitchInput(NewAxisValue);
 }
-
-void AFinalCharacter::MoveForward(float Value)
+void AFinalCharacter::Turn(float NewAxisValue)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
-	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, Value);
-	}
-}
-
-void AFinalCharacter::MoveRight(float Value)
-{
-	if ( (Controller != NULL) && (Value != 0.0f) )
-	{
-		// find out which way is right
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
-		// get right vector 
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		// add movement in that direction
-		AddMovementInput(Direction, Value);
-	}
+	AddControllerYawInput(NewAxisValue);
 }

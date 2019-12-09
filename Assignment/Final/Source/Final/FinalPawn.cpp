@@ -29,18 +29,22 @@ AFinalPawn::AFinalPawn()
 	Movement->MaxSpeed = 2400.f;
 	SpringArm->bEnableCameraLag = true;
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_CARDBOARD(TEXT("/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Cardboard.SK_CharM_Cardboard"));
-	if (SK_CARDBOARD.Succeeded())
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_STANDARD(TEXT("/Game/InfinityBladeWarriors/Character/CompleteCharacters/SK_CharM_Standard.SK_CharM_Standard"));
+	if (SK_STANDARD.Succeeded())
 	{
-		Mesh->SetSkeletalMesh(SK_CARDBOARD.Object);
+		Mesh->SetSkeletalMesh(SK_STANDARD.Object);
 	}
+
+	Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+
+	static ConstructorHelpers::FClassFinder<UAnimInstance> FINAL_ANIM(TEXT("/Game/Book/Animations/FinalAnimBlueprint.FinalAnimBlueprint_C"));
+	if (FINAL_ANIM.Succeeded()) { Mesh->SetAnimInstanceClass(FINAL_ANIM.Class); }
 }
 
 // Called when the game starts or when spawned
 void AFinalPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -65,5 +69,17 @@ void AFinalPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AFinalPawn::UpDown);
+	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AFinalPawn::LeftRight);
+}
+
+void AFinalPawn::UpDown(float NewAxisValue)
+{
+	AddMovementInput(GetActorForwardVector(), NewAxisValue);
+}
+
+void AFinalPawn::LeftRight(float NewAxisValue)
+{
+	AddMovementInput(GetActorRightVector(), NewAxisValue);
 }
 

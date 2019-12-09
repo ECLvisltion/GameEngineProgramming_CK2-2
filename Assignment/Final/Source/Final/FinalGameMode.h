@@ -2,18 +2,17 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Final.h"
 #include "GameFramework/GameModeBase.h"
 #include "FinalGameMode.generated.h"
 
-UCLASS(minimalapi)
+UCLASS()
 class AFinalGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
 	AFinalGameMode();
+
+	virtual void PostLogin(APlayerController * NewPlayer) override;
 };
-
-
-
