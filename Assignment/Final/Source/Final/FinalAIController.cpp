@@ -20,7 +20,11 @@ void AFinalAIController::OnPossess(APawn * InPawn)
 	Super::OnPossess(InPawn);
 	if (UseBlackboard(BBAsset, Blackboard))
 	{
-		//Blackboard->SetValueAsVector(FName("BallPos"), )
+		Blackboard->SetValueAsFloat(FName("WaitTimer"), 3.0f);
+		Blackboard->SetValueAsVector(
+			FName("HomePos"),
+			FVector(1000.0f, 0.0f, 108.0f));
+		RunBehaviorTree(BTAsset);
 	}
 }
 
